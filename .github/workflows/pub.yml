@@ -1,19 +1,30 @@
-name: GitHub Actions Build and Deploy Demo
+name: Build & Pub
+
 on:
   push:
     branches:
       - master
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@master
 
-      - name: Build and Deploy
-        uses: JamesIves/github-pages-deploy-action@master
-        env:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "GitHub Action build docs" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: docs
-          BUILD_SCRIPT: npm install && npm run build
